@@ -4,6 +4,19 @@
 
 This command-line demo trains a text classifier on a tiny synthetic dataset, reports a held-out evaluation, and predicts whether new text resembles the demo's bullying or non_bullying examples.
 
+## Demo flow
+
+```mermaid
+flowchart LR
+    data["Tiny synthetic CSV dataset"] --> validate["Validate labels and create stratified holdout split"]
+    validate --> pipeline["TF-IDF plus Logistic Regression"]
+    pipeline --> evaluate["Evaluate holdout metrics"]
+    pipeline --> save["Save demo model artifact"]
+    input["One text input"] --> predict["Load model and predict"]
+    save --> predict
+    predict --> output["Demo label and model score"]
+```
+
 ## Requirements
 
 - Python 3.10 or newer

@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 
 import joblib
@@ -11,6 +12,7 @@ from sklearn.pipeline import Pipeline
 ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = ROOT / "data" / "sample.csv"
 MODEL_PATH = ROOT / "artifacts" / "model.joblib"
+TEST_FRACTION = 0.25
 
 
 def main() -> None:
@@ -19,13 +21,25 @@ def main() -> None:
         raise ValueError("The CSV must contain 'text' and 'label' columns.")
     if data[["text", "label"]].isna().any().any():
         raise ValueError("The dataset contains empty text or label values.")
-    if data["label"].nunique() < 2 or data["label"].value_counts().min() < 2:
-        raise ValueError("Each label needs at least two examples for a stratified split.")
+
+    label_count = data["label"].nunique()
+    test_rows = math.ceil(len(data) * TEST_FRACTION)
+    train_rows = len(data) - test_rows
+    counts = data["label"].value_counts()
+    if (
+        label_count < 2
+        or counts.min() < 2
+        or test_rows < label_count
+        or train_rows < label_count
+    ):
+        raise ValueError(
+            "Each label needs at least two examples, and the stratified split must leave at least one example per label in both train and test sets."
+        )
 
     x_train, x_test, y_train, y_test = train_test_split(
         data["text"],
         data["label"],
-        test_size=0.25,
+        test_size=TEST_FRACTION,
         random_state=42,
         stratify=data["label"],
     )
